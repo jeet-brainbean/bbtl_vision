@@ -1,0 +1,32 @@
+{
+  "node_modules/@tabler/icons-webfont/fonts/tabler-icons.eot": {
+    "file": "assets/tabler-icons-sScIb7m0.eot",
+    "src": "node_modules/@tabler/icons-webfont/fonts/tabler-icons.eot"
+  },
+  "node_modules/@tabler/icons-webfont/fonts/tabler-icons.ttf": {
+    "file": "assets/tabler-icons-j_O12WfJ.ttf",
+    "src": "node_modules/@tabler/icons-webfont/fonts/tabler-icons.ttf"
+  },
+  "node_modules/@tabler/icons-webfont/fonts/tabler-icons.woff": {
+    "file": "assets/tabler-icons-nNqIMFnI.woff",
+    "src": "node_modules/@tabler/icons-webfont/fonts/tabler-icons.woff"
+  },
+  "node_modules/@tabler/icons-webfont/fonts/tabler-icons.woff2": {
+    "file": "assets/tabler-icons--SaDmKpu.woff2",
+    "src": "node_modules/@tabler/icons-webfont/fonts/tabler-icons.woff2"
+  },
+  "resources/js/app.js": {
+    "assets": [
+      "assets/tabler-icons-sScIb7m0.eot",
+      "assets/tabler-icons--SaDmKpu.woff2",
+      "assets/tabler-icons-nNqIMFnI.woff",
+      "assets/tabler-icons-j_O12WfJ.ttf"
+    ],
+    "css": [
+      "assets/app-ir0nJbAB.css"
+    ],
+    "file": "assets/app-sZxQvIBJ.js",
+    "isEntry": true,
+    "src": "resources/js/app.js"
+  }
+}
