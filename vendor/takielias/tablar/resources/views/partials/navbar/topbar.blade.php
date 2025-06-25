@@ -4,7 +4,10 @@
         <div class="navbar navbar-light">
             <div class="container-xl">
                 <ul class="navbar-nav">
-                    @each('tablar::partials.navbar.dropdown-item', $tablar->menu('sidebar'), 'item')
+                        @foreach($tablar->menu('sidebar') as $item)
+                            @continue(in_array($item['text'], ['Transaction History', 'Purchase Credit']))
+                            @include('tablar::partials.navbar.dropdown-item', ['item' => $item])
+                        @endforeach
                 </ul>
                 {{-- @include('tablar::partials.navbar.search') --}}
             </div>
