@@ -45,4 +45,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function getUserWiseAgeSetting()
+    {
+        return UserWiseAgeSetting::getUserWiseAgeSetting($this->id);
+    }
 }

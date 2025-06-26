@@ -66,6 +66,7 @@
                                         <li>Cost: 1 credit per image</li>
                                     </ul>
                                 </div>
+                                <div id="resultContent"></div>
                             </div>
                         </div>
                     </div>
@@ -94,6 +95,10 @@
 @endsection
 @section('tablar_js')
 <script>
+const ageSetting = @json($age_setting);
+</script>
+
+<script>
 $('#faceImage').change(function() {
     //on change event
 
@@ -120,30 +125,89 @@ $('#faceImage').change(function() {
                 if (result.error) {
                     alert(result.error)
                 } else {
+                    let resultContent = '';
                     let content =
                         '<div class="table-responsive-sm table-responsive-md"><table class="table table-bordered">';
                     preview_phpto.src = URL.createObjectURL(file);
-                    for (var i = 0; i < result.faces.length; i++) {
+
+                    let successCount = 0;
+                    let errorCount = 0;
+                    var soundTrackPath = "{{ asset('assets/sounds/success.mp3') }}";
+                    for (let i = 0; i < result.faces.length; i++) {
                         let data = result.faces[i];
+                        content += '<tr><td colspan="3"><strong>Face #' + (i + 1) +
+                            '</strong></td></tr>';
+
                         if (data.Gender) {
-                            content += '<tr><td scope="row">' + (i + 1) +
-                                '</td><th>Gender: </th><td>' + data.Gender.Value + '</td></tr>';
+                            content += '<tr><td></td><th>Gender: </th><td>' + data.Gender.Value +
+                                '</td></tr>';
                         }
+
                         if (data.AgeRange) {
-                            content += '<tr><td></td><th>Age Range: </th><td>' + data.AgeRange.Low +
-                                ' - ' + data.AgeRange.High + '</td></tr>';
+                            const low = data.AgeRange.Low;
+                            const high = data.AgeRange.High;
+
+                            console.log('Age Range:', low + ' - ' + high);
+                            console.log('Success Age Range:', ageSetting.success_min_age + ' - ' +
+                                ageSetting.success_max_age);
+                            console.log('Error Age Range:', ageSetting.error_min_age + ' - ' +
+                                ageSetting.error_max_age);
+
+                            content += '<tr><td></td><th>Age Range: </th><td>' + low + ' - ' +
+                                high + '</td></tr>';
+
+                            const isOverlapping = (rangeLow, rangeHigh, settingLow,
+                                settingHigh) => {
+                                return rangeLow <= settingHigh && rangeHigh >= settingLow;
+                            };
+
+                            if (isOverlapping(low, high, ageSetting.success_min_age, ageSetting
+                                    .success_max_age)) {
+                                successCount++;
+                            } else if (isOverlapping(low, high, ageSetting.error_min_age, ageSetting
+                                    .error_max_age)) {
+                                errorCount++;
+                            }
                         }
+
                         if (data.Confidence) {
                             content += '<tr><td></td><th>Confidence: </th><td>' + data.Confidence +
                                 '</td></tr>';
                         }
+
                         if (data.Smile) {
                             content += '<tr><td></td><th>Smile on Face: </th><td>' + data.Smile
                                 .Value + '</td></tr>';
                         }
                     }
                     content += '</table></div>';
+
+                    // Show success or error message
+                    if (successCount > 0 && errorCount === 0) {
+                        soundTrackPath = "{{ asset('assets/sounds/success.mp3') }}";
+                        resultContent +=
+                            `<div class="alert alert-success mt-3">Success! All detected faces fall within the preferred age range.</div>`;
+                    } else if (errorCount == 0 && successCount == 0) {
+                        soundTrackPath = "{{ asset('assets/sounds/info.mp3') }}";
+                        resultContent +=
+                            `<div class="alert alert-info mt-3">Info: Detected ages do not match either range.</div>`;
+                    } else if (errorCount > 0) {
+                        soundTrackPath = "{{ asset('assets/sounds/error.mp3') }}";
+                        resultContent +=
+                            `<div class="alert alert-danger mt-3">Warning! Some faces fall within the error age range.</div>`;
+                    } else {
+                        //default case
+                        soundTrackPath = "{{ asset('assets/sounds/info.mp3') }}";
+                        resultContent +=
+                            `<div class="alert alert-info mt-3">Info: Detected ages do not match either range.</div>`;
+                    }
+
                     $("#result-box").html(content);
+                    $("#resultContent").html(resultContent);
+                    const audio = new Audio(soundTrackPath);
+                    audio.play().catch(function(error) {
+                        console.warn("Audio playback failed:", error);
+                    });
                 }
             },
             error: function(xhr, status, error) {
@@ -153,5 +217,9 @@ $('#faceImage').change(function() {
         });
     }
 });
+
+function isOverlapping(rangeLow, rangeHigh, settingLow, settingHigh) {
+    return rangeLow <= settingHigh && rangeHigh >= settingLow;
+}
 </script>
 @endsection

@@ -8,6 +8,7 @@ use Storage;
 use App\Models\detectionResult;
 use App\Models\User;
 use App\Models\Setting;
+use App\Models\UserWiseAgeSetting;
 use File;
 
 class FaceDetectionController extends Controller
@@ -19,7 +20,9 @@ class FaceDetectionController extends Controller
     }
     public function uploadImage(){
         $credit_require_per_image = Setting::where('key','credit_require_per_image')->value('value');
-        return view('face-detection.upload-image.index',with(compact('credit_require_per_image')));
+        $user_id = Auth()->user()->id;
+        $age_setting = UserWiseAgeSetting::where('user_id', $user_id)->first();
+        return view('face-detection.upload-image.index',with(compact('credit_require_per_image', 'age_setting')));
     }
 
     public function postUploadImage(Request $request){
@@ -30,12 +33,12 @@ class FaceDetectionController extends Controller
         $request->validate([
             'photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ]);
-    
+
         // Get image from request
         $image = $request->file('photo');
 
         //Detect face function
-        $result= $this->detectFaceDetails($image); 
+        $result= $this->detectFaceDetails($image);
         if( is_array($result) && array_key_exists("error", $result)){
             return response()->json(['error' => $result['error']], 500);
         } else{
@@ -44,7 +47,7 @@ class FaceDetectionController extends Controller
             if (!file_exists($uploadPath)) {
                 mkdir($uploadPath, 0755, true);
             }
-            
+
             if ($request->file('photo')) {
                 $imageName = time() . '.' . $request->photo->extension();
                 $request->photo->move($uploadPath, $imageName);
@@ -52,7 +55,7 @@ class FaceDetectionController extends Controller
 
             //Redeem credits
             $credit_require_per_image = Setting::where('key','credit_require_per_image')->value('value');
-            $new_credits = Auth()->user()->credits -  $credit_require_per_image; 
+            $new_credits = Auth()->user()->credits -  $credit_require_per_image;
             $user = User::where('id',Auth()->user()->id)->update(['credits'=>$new_credits]);
 
             //Store detection result
@@ -67,7 +70,9 @@ class FaceDetectionController extends Controller
     }
 
     public function liveCapture(Request $request){
-        return view('face-detection.live-capture.index');
+        $user_id = Auth()->user()->id;
+        $age_setting = UserWiseAgeSetting::where('user_id', $user_id)->first();
+        return view('face-detection.live-capture.index' ,with(compact('age_setting')));
     }
 
     public function proceedLiveCapture(Request $request){
@@ -86,17 +91,17 @@ class FaceDetectionController extends Controller
             $imageData = base64_decode($image_parts[1]);
 
             $fileName = time() . '.png';
-            $file = $folderPath . $fileName; 
+            $file = $folderPath . $fileName;
 
             Storage::put($file, $imageData);
             $imageurl = Storage::url($file);
 
             // File::move(storage_path('/app/'.$file), public_path('uploads/'.$fileName));
 
-   
+
             //Redeem credits
             $credit_require_per_image = Setting::where('key','credit_require_per_image')->value('value');
-            $new_credits = Auth()->user()->credits -  $credit_require_per_image ; 
+            $new_credits = Auth()->user()->credits -  $credit_require_per_image ;
             $user = User::where('id',Auth()->user()->id)->update(['credits'=>$new_credits]);
 
             //Store detection result
@@ -119,7 +124,7 @@ class FaceDetectionController extends Controller
             'region' => 'us-east-1',
             'version' => 'latest',
         ]);
-    
+
         try {
             $result = $rekognition->detectFaces([
                 'Image' => [
@@ -128,17 +133,17 @@ class FaceDetectionController extends Controller
                 'Attributes' =>['ALL']
                 //  'MinConfidence' => 50
             ]);
-    
+
             // Process the response
             $faces = $result->get('FaceDetails');
-            
-           
+
+
             // Store or process face details as needed
             return response()->json(['faces' => $faces]);
-    
+
         } catch (\Exception $e) {
             return array('error' => 'Face detection failed: ' . $e->getMessage());
         }
     }
-    
+
 }
